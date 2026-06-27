@@ -5,6 +5,8 @@
  */
 package org.mapstruct.ap.internal.model.common;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -17,7 +19,7 @@ import org.mapstruct.ap.internal.gem.MappingTargetGem;
 import org.mapstruct.ap.internal.gem.SourcePropertyNameGem;
 import org.mapstruct.ap.internal.gem.TargetPropertyNameGem;
 import org.mapstruct.ap.internal.gem.TargetTypeGem;
-import org.mapstruct.ap.internal.util.Collections;
+import org.mapstruct.ap.internal.util.JSpecifyConstants;
 
 /**
  * A parameter of a mapping method.
@@ -30,6 +32,7 @@ public class Parameter extends ModelElement {
     private final String name;
     private final String originalName;
     private final Type type;
+    private final List<Type> annotations;
     private final boolean mappingTarget;
     private final boolean targetType;
     private final boolean mappingContext;
@@ -38,11 +41,12 @@ public class Parameter extends ModelElement {
 
     private final boolean varArgs;
 
-    private Parameter(Element element, Type type, boolean varArgs) {
+    private Parameter(Element element, Type parameterType, boolean varArgs, List<Type> annotations) {
         this.element = element;
         this.name = element.getSimpleName().toString();
         this.originalName = name;
-        this.type = type;
+        this.type = parameterType;
+        this.annotations = annotations;
         this.mappingTarget = MappingTargetGem.instanceOn( element ) != null;
         this.targetType = TargetTypeGem.instanceOn( element ) != null;
         this.mappingContext = ContextGem.instanceOn( element ) != null;
@@ -59,6 +63,24 @@ public class Parameter extends ModelElement {
         this.name = name;
         this.originalName = originalName;
         this.type = type;
+        this.annotations = new ArrayList<>();
+        this.mappingTarget = mappingTarget;
+        this.targetType = targetType;
+        this.mappingContext = mappingContext;
+        this.sourcePropertyName = sourcePropertyName;
+        this.targetPropertyName = targetPropertyName;
+        this.varArgs = varArgs;
+    }
+
+    private Parameter(String name, String originalName, Type type, boolean mappingTarget, boolean targetType,
+                      boolean mappingContext,
+                      boolean sourcePropertyName, boolean targetPropertyName,
+                      boolean varArgs, List<Type> annotations) {
+        this.element = null;
+        this.name = name;
+        this.originalName = originalName;
+        this.type = type;
+        this.annotations = annotations;
         this.mappingTarget = mappingTarget;
         this.targetType = targetType;
         this.mappingContext = mappingContext;
@@ -91,6 +113,10 @@ public class Parameter extends ModelElement {
         return type;
     }
 
+    public List<Type> getAnnotations() {
+        return annotations;
+    }
+
     public boolean isMappingTarget() {
         return mappingTarget;
     }
@@ -115,7 +141,10 @@ public class Parameter extends ModelElement {
 
     @Override
     public Set<Type> getImportTypes() {
-        return Collections.asSet( type );
+        Set<Type> importTypes = new HashSet<>();
+        importTypes.add( type );
+        importTypes.addAll( annotations );
+        return importTypes;
     }
 
     public boolean isTargetType() {
@@ -156,7 +185,8 @@ public class Parameter extends ModelElement {
             mappingContext,
             sourcePropertyName,
             targetPropertyName,
-            varArgs
+            varArgs,
+            annotations
         );
     }
 
@@ -185,11 +215,12 @@ public class Parameter extends ModelElement {
 
     }
 
-    public static Parameter forElementAndType(VariableElement element, Type parameterType, boolean isVarArgs) {
+    public static Parameter forElementAndType(VariableElement element, Type parameterType, boolean isVarArgs, List<Type> annotations) {
         return new Parameter(
             element,
             parameterType,
-            isVarArgs
+            isVarArgs,
+            annotations
         );
     }
 

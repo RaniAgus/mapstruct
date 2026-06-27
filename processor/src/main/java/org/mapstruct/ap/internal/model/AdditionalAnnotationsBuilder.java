@@ -28,6 +28,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
 import org.mapstruct.ap.internal.gem.AnnotateWithGem;
@@ -41,6 +42,7 @@ import org.mapstruct.ap.internal.model.common.Type;
 import org.mapstruct.ap.internal.model.common.TypeFactory;
 import org.mapstruct.ap.internal.util.ElementUtils;
 import org.mapstruct.ap.internal.util.FormattingMessager;
+import org.mapstruct.ap.internal.util.JSpecifyConstants;
 import org.mapstruct.ap.internal.util.Message;
 import org.mapstruct.ap.internal.util.RepeatableAnnotations;
 import org.mapstruct.ap.internal.util.Strings;
@@ -96,13 +98,15 @@ public class AdditionalAnnotationsBuilder
     @Override
     public Set<Annotation> getProcessedAnnotations(Element source) {
         Set<Annotation> processedAnnotations = super.getProcessedAnnotations( source );
-        return addDeprecatedAnnotation( source, processedAnnotations );
+        addDeprecatedAnnotation( source, processedAnnotations );
+        addJSpecifyAnnotation( source, processedAnnotations );
+        return processedAnnotations;
     }
 
-    private Set<Annotation> addDeprecatedAnnotation(Element source, Set<Annotation> annotations) {
+    private void addDeprecatedAnnotation(Element source, Set<Annotation> annotations) {
         DeprecatedGem deprecatedGem = DeprecatedGem.instanceOn( source );
         if ( deprecatedGem == null ) {
-            return annotations;
+            return;
         }
         Type deprecatedType = typeFactory.getType( Deprecated.class );
         if ( annotations.stream().anyMatch( annotation -> annotation.getType().equals( deprecatedType ) ) ) {
@@ -111,7 +115,7 @@ public class AdditionalAnnotationsBuilder
                     deprecatedGem.mirror(),
                     Message.ANNOTATE_WITH_DUPLICATE,
                     deprecatedType.describe() );
-            return annotations;
+            return;
         }
         List<AnnotationElement> annotationElements = new ArrayList<>();
         if ( deprecatedGem.since() != null && deprecatedGem.since().hasValue() ) {
@@ -129,7 +133,17 @@ public class AdditionalAnnotationsBuilder
             ) );
         }
         annotations.add( new Annotation(deprecatedType, annotationElements ) );
-        return annotations;
+    }
+
+    private void addJSpecifyAnnotation(Element source, Set<Annotation> annotations) {
+        if ( !( source instanceof TypeElement ) || !typeFactory.isTypeAvailable( JSpecifyConstants.NULL_MARKED_FQN ) ) {
+            return;
+        }
+        Type mapperType = typeFactory.getType( source.asType() );
+        if ( mapperType.isNullMarked() ) {
+            Type nullMarkedType = typeFactory.getType( JSpecifyConstants.NULL_MARKED_FQN );
+            annotations.add( new Annotation( nullMarkedType ) );
+        }
     }
 
     private void addAndValidateMapping(Set<Annotation> mappings, Element source, AnnotateWithGem gem, Annotation anno) {

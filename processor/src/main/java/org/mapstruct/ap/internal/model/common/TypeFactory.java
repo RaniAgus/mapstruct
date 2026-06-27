@@ -25,11 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
@@ -40,18 +36,7 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 
 import org.mapstruct.ap.internal.gem.BuilderGem;
-import org.mapstruct.ap.internal.util.AnnotationProcessingException;
-import org.mapstruct.ap.internal.util.Collections;
-import org.mapstruct.ap.internal.util.ElementUtils;
-import org.mapstruct.ap.internal.util.Extractor;
-import org.mapstruct.ap.internal.util.FormattingMessager;
-import org.mapstruct.ap.internal.util.JavaCollectionConstants;
-import org.mapstruct.ap.internal.util.JavaStreamConstants;
-import org.mapstruct.ap.internal.util.Message;
-import org.mapstruct.ap.internal.util.NativeTypes;
-import org.mapstruct.ap.internal.util.RoundContext;
-import org.mapstruct.ap.internal.util.Strings;
-import org.mapstruct.ap.internal.util.TypeUtils;
+import org.mapstruct.ap.internal.util.*;
 import org.mapstruct.ap.internal.util.accessor.Accessor;
 import org.mapstruct.ap.internal.version.VersionInformation;
 import org.mapstruct.ap.spi.AstModifyingAnnotationProcessor;
@@ -465,10 +450,52 @@ public class TypeFactory {
             // we know that this parameter should be used as varargs
             boolean isVarArgs = !varIt.hasNext() && method.isVarArgs();
 
-            result.add( Parameter.forElementAndType( parameter, type, isVarArgs ) );
+            result.add( Parameter.forElementAndType( parameter, type, isVarArgs, getAnnotations(parameter) ) );
         }
 
         return result;
+    }
+
+    private List<Type> getAnnotations(Element element) {
+        return extractJSpecifyAnnotations( element );
+    }
+
+    private List<Type> extractJSpecifyAnnotations(Element element) {
+        List<Type> result = new ArrayList<>();
+        if ( !isTypeAvailable( JSpecifyConstants.NULLABLE_FQN ) ) {
+            return result;
+        }
+
+        if ( hasAnnotationFor(element, JSpecifyConstants.NULLABLE_FQN) ) {
+            result.add( getType( JSpecifyConstants.NULLABLE_FQN ) );
+        }
+        if ( hasAnnotationFor(element, JSpecifyConstants.NON_NULL_FQN) ) {
+            result.add( getType( JSpecifyConstants.NON_NULL_FQN ) );
+        }
+
+        return result;
+    }
+
+    private static boolean hasAnnotationFor(Element element, String fqn) {
+        if ( hasAnnotationMirrorFqn( element.getAnnotationMirrors(), fqn ) ) {
+            return true;
+        }
+        if ( element instanceof VariableElement ) {
+            return hasAnnotationMirrorFqn( element.asType().getAnnotationMirrors(), fqn );
+        }
+        return false;
+    }
+
+    private static boolean hasAnnotationMirrorFqn(
+            List<? extends AnnotationMirror> mirrors, String fqn) {
+        for ( AnnotationMirror mirror : mirrors ) {
+            Element annotationElement = mirror.getAnnotationType().asElement();
+            if ( annotationElement instanceof TypeElement
+                && ( (TypeElement) annotationElement ).getQualifiedName().contentEquals( fqn ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Type getReturnType(DeclaredType includingType, Accessor accessor) {
