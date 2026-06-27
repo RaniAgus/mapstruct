@@ -149,6 +149,7 @@ public abstract class MappingMethod extends GeneratedTypeMethod {
 
         for ( Parameter param : parameters ) {
             types.addAll( param.getType().getImportTypes() );
+            types.addAll( param.getImportTypes() );
         }
 
         types.addAll( getReturnType().getImportTypes() );
