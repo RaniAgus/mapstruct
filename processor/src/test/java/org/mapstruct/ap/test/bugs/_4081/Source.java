@@ -6,28 +6,17 @@
 package org.mapstruct.ap.test.bugs._4081;
 
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 public class Source {
-    private final @NonNull Nested nested;
 
-    public Source(@NonNull Nested nested) {
-        this.nested = nested;
+    private String value;
+
+    @NonNull
+    public String getValue() {
+        return value;
     }
 
-    public @NonNull Nested getNested() {
-        return nested;
-    }
-
-    public static class Nested {
-        private final @Nullable String foo;
-
-        public Nested(@Nullable String foo) {
-            this.foo = foo;
-        }
-
-        public @Nullable String getFoo() {
-            return foo;
-        }
+    public void setValue(String value) {
+        this.value = value;
     }
 }
