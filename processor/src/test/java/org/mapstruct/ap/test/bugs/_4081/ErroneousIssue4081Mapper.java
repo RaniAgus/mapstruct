@@ -5,22 +5,19 @@
  */
 package org.mapstruct.ap.test.bugs._4081;
 
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 
 @Mapper
+@NullMarked
 public interface ErroneousIssue4081Mapper {
-
-    @Mapping(target = "payload", source = "value", qualifiedByName = "mapValue")
     Target map(Source source);
 
-    @Named("mapValue")
-    default @Nullable Integer mapValue(String value) {
-        if ( value.isEmpty() ) {
+    default Target.@Nullable Payload mapPayload(String payload) {
+        if ( payload.isBlank() ) {
             return null;
         }
-        return value.length();
+        return new Target.Payload( payload );
     }
 }

@@ -9,13 +9,26 @@ import org.jspecify.annotations.NonNull;
 
 public class Target {
 
-    private final Integer payload;
+    private final Payload payload;
 
-    public Target(@NonNull Integer payload) {
+    public Target(@NonNull Payload payload) {
         this.payload = payload;
     }
 
-    public Integer getPayload() {
+    public @NonNull Payload getPayload() {
         return payload;
+    }
+
+    public static class Payload {
+
+        private final String value;
+
+        public Payload(@NonNull String value) {
+            this.value = value;
+        }
+
+        public @NonNull String getValue() {
+            return value;
+        }
     }
 }

@@ -33,7 +33,7 @@ public class Issue4081Test {
         diagnostics = {
             @Diagnostic(type = ErroneousIssue4081Mapper.class,
                 kind = javax.tools.Diagnostic.Kind.ERROR,
-                message = "Can't map potentially nullable source property \"value\" to @NonNull " +
+                message = "Can't map potentially nullable source property \"payload\" to @NonNull " +
                     "constructor parameter \"payload\". Consider adding a defaultValue or " +
                     "defaultExpression.")
         })

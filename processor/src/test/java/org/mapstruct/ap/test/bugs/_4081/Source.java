@@ -9,14 +9,14 @@ import org.jspecify.annotations.NonNull;
 
 public class Source {
 
-    private String value;
+    private String payload;
 
     @NonNull
-    public String getValue() {
-        return value;
+    public String getPayload() {
+        return payload;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setPayload(String payload) {
+        this.payload = payload;
     }
 }
